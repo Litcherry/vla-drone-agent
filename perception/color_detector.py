@@ -1,0 +1,2 @@
+"""Color target detector placeholder."""
+

@@ -1,0 +1,2 @@
+"""PyBullet world construction placeholder."""
+

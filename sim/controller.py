@@ -1,0 +1,2 @@
+"""Drone action controller placeholder."""
+

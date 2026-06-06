@@ -1,0 +1,10 @@
+.idea/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+outputs/*.mp4
+outputs/*.csv
+outputs/*.jsonl
+!outputs/.gitkeep
+
