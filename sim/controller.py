@@ -3,10 +3,14 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from sim.drone import SimpleDrone
 from sim.world import PyBulletWorld
+
+
+StepCallback = Callable[[], None]
 
 
 @dataclass(frozen=True)
@@ -34,15 +38,16 @@ class DroneController:
         self.speed = speed
         self.arrival_threshold = arrival_threshold
 
-    def takeoff(self, altitude: float) -> ControlResult:
+    def takeoff(self, altitude: float, on_step: StepCallback | None = None) -> ControlResult:
         current = self.drone.get_state().position
         target = (current[0], current[1], altitude)
-        return self.move_to(target)
+        return self.move_to(target, on_step=on_step)
 
     def move_to(
         self,
         target_position: tuple[float, float, float],
         max_steps: int = 500,
+        on_step: StepCallback | None = None,
     ) -> ControlResult:
         for step in range(max_steps):
             current = self.drone.get_state().position
@@ -55,6 +60,9 @@ class DroneController:
             self.drone.set_position(next_position)
             self.world.step()
 
+            if on_step is not None:
+                on_step()
+
         final_error = distance(self.drone.get_state().position, target_position)
         return ControlResult(
             success=False,
@@ -63,7 +71,7 @@ class DroneController:
             reason="max_steps_exceeded",
         )
 
-    def hover(self, duration: float) -> ControlResult:
+    def hover(self, duration: float, on_step: StepCallback | None = None) -> ControlResult:
         steps = max(1, int(duration / self.world.time_step))
         start = self.drone.get_state().position
 
@@ -71,13 +79,16 @@ class DroneController:
             self.drone.set_position(start)
             self.world.step()
 
+            if on_step is not None:
+                on_step()
+
         final_error = distance(self.drone.get_state().position, start)
         return ControlResult(success=True, final_error=final_error, steps=steps)
 
-    def land(self) -> ControlResult:
+    def land(self, on_step: StepCallback | None = None) -> ControlResult:
         current = self.drone.get_state().position
         target = (current[0], current[1], 0.05)
-        return self.move_to(target)
+        return self.move_to(target, on_step=on_step)
 
 
 def distance(
