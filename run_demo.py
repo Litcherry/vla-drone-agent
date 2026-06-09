@@ -14,6 +14,7 @@ from sim.world import PyBulletWorld
 
 from perception.color_detector import ColorTargetDetector
 
+from agent.replanner import build_safe_fallback_plan
 
 def run_task(task: str, gui: bool = False, output_dir: str = "outputs") -> dict[str, Any]:
     """Run one natural language drone task and save demo artifacts."""
@@ -60,6 +61,50 @@ def run_task(task: str, gui: bool = False, output_dir: str = "outputs") -> dict[
                 recorder.capture_frame()
             elapsed_steps += 1
 
+        def execute_fallback(reason: str) -> None:
+            fallback_actions = build_safe_fallback_plan(reason)
+            recorder.record_event(
+                {
+                    "event": "fallback_started",
+                    "reason": reason,
+                    "actions": fallback_actions,
+                }
+            )
+
+            for fallback_index, fallback_action in enumerate(fallback_actions):
+                fallback_name = fallback_action["action"]
+                fallback_result = None
+
+                recorder.record_event(
+                    {
+                        "event": "fallback_action_started",
+                        "index": fallback_index,
+                        "action": fallback_action,
+                    }
+                )
+
+                if fallback_name == "hover":
+                    fallback_result = controller.hover(
+                        float(fallback_action["duration"]),
+                        on_step=record_step,
+                    )
+                elif fallback_name == "land":
+                    fallback_result = controller.land(on_step=record_step)
+
+                recorder.record_event(
+                    {
+                        "event": "fallback_action_finished",
+                        "index": fallback_index,
+                        "action": fallback_action,
+                        "success": fallback_result.success if fallback_result else False,
+                        "final_error": fallback_result.final_error if fallback_result else None,
+                        "steps": fallback_result.steps if fallback_result else 0,
+                        "reason": fallback_result.reason if fallback_result else "unsupported_fallback_action",
+                    }
+                )
+
+            recorder.record_event({"event": "fallback_finished", "reason": reason})
+
         for index, action in enumerate(actions):
             action_name = action["action"]
             recorder.record_event({"event": "action_started", "index": index, "action": action})
@@ -83,6 +128,7 @@ def run_task(task: str, gui: bool = False, output_dir: str = "outputs") -> dict[
                             "reason": failure_reason,
                         }
                     )
+                    execute_fallback(failure_reason)
                     break
 
                 current_target = detection.position
@@ -112,6 +158,7 @@ def run_task(task: str, gui: bool = False, output_dir: str = "outputs") -> dict[
                             "reason": failure_reason,
                         }
                     )
+                    execute_fallback(failure_reason)
                     break
 
                 base_position = detection.position
@@ -128,6 +175,7 @@ def run_task(task: str, gui: bool = False, output_dir: str = "outputs") -> dict[
             else:
                 success = False
                 failure_reason = f"unsupported_action:{action_name}"
+                execute_fallback(failure_reason)
                 break
 
             if result is not None:
@@ -147,6 +195,7 @@ def run_task(task: str, gui: bool = False, output_dir: str = "outputs") -> dict[
                 if not result.success:
                     success = False
                     failure_reason = result.reason
+                    execute_fallback(failure_reason)
                     break
 
         duration = time.time() - started_at
