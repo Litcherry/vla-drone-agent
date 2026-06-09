@@ -73,3 +73,36 @@
 1. 完成 Perception 模块，使 Agent 通过 perception 接口获取 red、blue、green 目标位置。
 2. 增加 Agent Loop 中的失败处理和 fallback 逻辑，覆盖找不到目标、非法任务和越界任务等情况。
 3. 编写 `experiments/tasks.json` 和 `experiments/evaluate.py`，设计至少 10 条自然语言任务，并输出 `results.csv`。
+
+## Day 4
+
+### 今日完成内容
+
+1. 补充了独立的 Perception 模块，实现 `ColorTargetDetector` 和 `DetectionResult`，使 Agent 通过 perception 接口获取 red、blue、green 目标位置，而不是通过直接访问仿真世界得到。
+2. 将 `run_demo.py` 中的目标搜索逻辑改为调用 `detector.detect(color)`，并在 `events.jsonl` 的 `target_found` 事件中记录感知来源 `source="sim_observation"`。
+3. 重新运行 demo，确认 `outputs/demo.mp4`、`outputs/trajectory.csv` 和 `outputs/events.jsonl` 可以正常生成。
+
+### 遇到的问题
+
+1. 当前 Perception 仍然使用 PyBullet 仿真环境观测作为输入，而不是直接从 RGB 图像中完成颜色检测和图像坐标到世界坐标的转换。
+2. 在重新运行 demo 后，`demo.mp4` 的视觉效果没有辩护。一开始我担心视频没有重新生成，后来检查文件时间后确认视频、轨迹和事件日志都确实已经更新了，只是由于目标位置和无人机轨迹没有变化，所以视频看起来与之前基本一致。
+3. 当前系统对 red、blue、green 之外的目标颜色会在 schema 阶段被拒绝，因此这类任务不会进入 Agent Loop，也不会触发执行阶段的 fallback。后续需要通过“目标缺失”场景来测试找不到目标后的 fallback 行为。
+
+### 解决方式
+
+1. 明确当前 Perception 属于 simulator-observation-based perception，符合任务中“从仿真画面或环境观测中定位目标”的要求；同时在后续报告中需要如实说明该简化，并讨论如何扩展为 camera image + color segmentation + depth projection 的图像级感知。
+2. 通过检查 `outputs` 文件修改时间和 `events.jsonl` 中的 `target_found` 事件，确认 perception 改动已经生效。虽然视频轨迹没有明显变化，但事件日志中新增了感知来源字段，说明系统结构已经从直接访问 world 改为通过 perception 接口获取目标位置。
+3. 将后续失败处理设计调整为：对于非法颜色或非法 action，在 schema/safety 阶段拒绝；对于 red、blue、green 目标在环境中不存在的情况，在 Agent Loop 中触发 fallback，例如 hover briefly and land。
+
+### AI 使用情况
+
+1. 使用 AI 辅助分析 Perception 模块的实现边界，比较了基于仿真环境观测和基于 RGB 图像颜色检测两种方案。
+2. 使用 AI 分析代码，确认当前系统中哪些部分已经满足任务要求，哪些部分仍需要补充。
+3. 使用 AI 分析 `demo.mp4` 看起来没有变化的原因，参考 AI 通过文件时间和事件日志验证输出确实已经重新生成。
+
+### 明日计划
+
+1. 完成 Agent Loop 的失败处理和 fallback 逻辑，使找不到目标或动作失败时能够记录失败原因，并执行安全降落策略。
+2. 设计至少 10 条自然语言实验任务，覆盖正常任务、不同颜色、不同 hover 时间、目标缺失、越界或非法任务以及需要 fallback 的情况。
+3. 实现 `experiments/evaluate.py`，批量运行任务并输出 `outputs/results.csv`。
+4. 完成 README、`docs/ai_usage.md`、实验报告和 research note 的正文内容。
