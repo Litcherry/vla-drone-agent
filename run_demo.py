@@ -12,6 +12,8 @@ from sim.drone import SimpleDrone
 from sim.recorder import DemoRecorder
 from sim.world import PyBulletWorld
 
+from perception.color_detector import ColorTargetDetector
+
 
 def run_task(task: str, gui: bool = False, output_dir: str = "outputs") -> dict[str, Any]:
     """Run one natural language drone task and save demo artifacts."""
@@ -33,6 +35,7 @@ def run_task(task: str, gui: bool = False, output_dir: str = "outputs") -> dict[
         drone = SimpleDrone()
         drone.spawn()
         controller = DroneController(world, drone, speed=0.025)
+        detector = ColorTargetDetector(world)
 
         recorder.record_event(
             {
@@ -68,8 +71,8 @@ def run_task(task: str, gui: bool = False, output_dir: str = "outputs") -> dict[
 
             elif action_name == "search":
                 target_color = action["target"]
-                target_position = world.get_target_position(target_color)
-                if target_position is None:
+                detection = detector.detect(target_color)
+                if detection is None:
                     success = False
                     failure_reason = f"target_not_found:{target_color}"
                     recorder.record_event(
@@ -82,12 +85,13 @@ def run_task(task: str, gui: bool = False, output_dir: str = "outputs") -> dict[
                     )
                     break
 
-                current_target = target_position
+                current_target = detection.position
                 recorder.record_event(
                     {
                         "event": "target_found",
                         "target": target_color,
-                        "position": target_position,
+                        "position": detection.position,
+                        "source": detection.source,
                     }
                 )
 
@@ -96,8 +100,8 @@ def run_task(task: str, gui: bool = False, output_dir: str = "outputs") -> dict[
 
             elif action_name == "move_above":
                 target_color = action["target"]
-                base_position = world.get_target_position(target_color)
-                if base_position is None:
+                detection = detector.detect(target_color)
+                if detection is None:
                     success = False
                     failure_reason = f"target_not_found:{target_color}"
                     recorder.record_event(
@@ -110,6 +114,7 @@ def run_task(task: str, gui: bool = False, output_dir: str = "outputs") -> dict[
                     )
                     break
 
+                base_position = detection.position
                 target_position = (base_position[0], base_position[1], float(action["height"]))
                 current_target = target_position
                 result = controller.move_to(target_position, on_step=record_step)
