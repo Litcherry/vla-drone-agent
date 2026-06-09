@@ -56,6 +56,24 @@ def extract_first_number_before_keywords(
 
     return default
 
+def extract_move_to_position(text: str) -> tuple[float, float, float] | None:
+    """Extract a move_to position from x/y/z coordinate expressions."""
+
+    patterns = [
+        r"x\s*=\s*(-?\d+(?:\.\d+)?)\s*,?\s*y\s*=\s*(-?\d+(?:\.\d+)?)\s*,?\s*z\s*=\s*(-?\d+(?:\.\d+)?)",
+        r"x\s*(-?\d+(?:\.\d+)?)\s*,?\s*y\s*(-?\d+(?:\.\d+)?)\s*,?\s*z\s*(-?\d+(?:\.\d+)?)",
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, text)
+        if match:
+            return (
+                float(match.group(1)),
+                float(match.group(2)),
+                float(match.group(3)),
+            )
+
+    return None
 
 def parse_instruction(instruction: str) -> list[dict[str, Any]]:
     """Parse a natural language instruction into a validated action list."""
@@ -75,6 +93,10 @@ def parse_instruction(instruction: str) -> list[dict[str, Any]]:
 
     if color is not None and any(token in text for token in ("找", "搜索", "search", "find")):
         actions.append({"action": "search", "target": color})
+
+    move_to_position = extract_move_to_position(text)
+    if move_to_position is not None and any(token in text for token in ("move to", "飞到", "移动到")):
+        actions.append({"action": "move_to", "position": move_to_position})
 
     if color is not None and any(token in text for token in ("上方", "above")):
         height = extract_first_number_before_keywords(
