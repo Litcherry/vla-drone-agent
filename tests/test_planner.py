@@ -43,3 +43,44 @@ def test_parse_green_target_with_default_hover_duration():
 def test_unknown_instruction_is_rejected():
     with pytest.raises(ValueError):
         parse_instruction("随便做点什么")
+
+def test_parse_english_move_to_task():
+    instruction = "take off, move to x=1 y=-1 z=1.2, hover 2 seconds, then land"
+
+    actions = parse_instruction(instruction)
+
+    assert actions == [
+        {"action": "takeoff", "altitude": 1.5},
+        {"action": "move_to", "position": (1.0, -1.0, 1.2)},
+        {"action": "hover", "duration": 2.0},
+        {"action": "land"},
+    ]
+
+
+def test_parse_chinese_move_to_task():
+    instruction = "起飞，飞到 x=0.5 y=0.5 z=1.0，悬停 3 秒，然后降落"
+
+    actions = parse_instruction(instruction)
+
+    assert actions == [
+        {"action": "takeoff", "altitude": 1.5},
+        {"action": "move_to", "position": (0.5, 0.5, 1.0)},
+        {"action": "hover", "duration": 3.0},
+        {"action": "land"},
+    ]
+
+
+def test_out_of_bounds_move_to_instruction_is_rejected():
+    instruction = "take off, move to x=5 y=0 z=1, hover 2 seconds, then land"
+
+    with pytest.raises(ValueError):
+        parse_instruction(instruction)
+
+def test_unsupported_chinese_target_color_is_rejected():
+    with pytest.raises(ValueError, match="unsupported target color"):
+        parse_instruction("起飞，找到青色目标，然后降落")
+
+
+def test_unsupported_english_target_color_is_rejected():
+    with pytest.raises(ValueError, match="unsupported target color"):
+        parse_instruction("take off, find the orange target, then land")

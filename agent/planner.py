@@ -35,6 +35,28 @@ def extract_color(text: str) -> str | None:
 
     return None
 
+def detect_unsupported_color_query(text: str) -> str | None:
+    """Detect color-target expressions outside the supported color set."""
+
+    supported_color = extract_color(text)
+    if supported_color is not None:
+        return None
+
+    chinese_match = re.search(r"([\u4e00-\u9fff]{1,3})色目标", text)
+    if chinese_match:
+        return chinese_match.group(1) + "色"
+
+    english_match = re.search(
+        r"\b([a-z]+)\s+(?:target|object|goal)\b",
+        text,
+    )
+    if english_match:
+        candidate = english_match.group(1)
+        non_color_words = {"the", "a", "an", "colored", "colour"}
+        if candidate not in non_color_words:
+            return candidate
+
+    return None
 
 def extract_first_number_before_keywords(
     text: str,
@@ -56,11 +78,33 @@ def extract_first_number_before_keywords(
 
     return default
 
+def extract_move_to_position(text: str) -> tuple[float, float, float] | None:
+    """Extract a move_to position from x/y/z coordinate expressions."""
+
+    patterns = [
+        r"x\s*=\s*(-?\d+(?:\.\d+)?)\s*,?\s*y\s*=\s*(-?\d+(?:\.\d+)?)\s*,?\s*z\s*=\s*(-?\d+(?:\.\d+)?)",
+        r"x\s*(-?\d+(?:\.\d+)?)\s*,?\s*y\s*(-?\d+(?:\.\d+)?)\s*,?\s*z\s*(-?\d+(?:\.\d+)?)",
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, text)
+        if match:
+            return (
+                float(match.group(1)),
+                float(match.group(2)),
+                float(match.group(3)),
+            )
+
+    return None
 
 def parse_instruction(instruction: str) -> list[dict[str, Any]]:
     """Parse a natural language instruction into a validated action list."""
 
     text = normalize_instruction(instruction)
+    unsupported_color = detect_unsupported_color_query(text)
+    if unsupported_color is not None:
+        raise ValueError(f"unsupported target color: {unsupported_color}")
+    
     color = extract_color(text)
 
     actions: list[dict[str, Any]] = []
@@ -75,6 +119,10 @@ def parse_instruction(instruction: str) -> list[dict[str, Any]]:
 
     if color is not None and any(token in text for token in ("找", "搜索", "search", "find")):
         actions.append({"action": "search", "target": color})
+
+    move_to_position = extract_move_to_position(text)
+    if move_to_position is not None and any(token in text for token in ("move to", "飞到", "移动到")):
+        actions.append({"action": "move_to", "position": move_to_position})
 
     if color is not None and any(token in text for token in ("上方", "above")):
         height = extract_first_number_before_keywords(

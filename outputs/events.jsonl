@@ -1,12 +1,13 @@
-{"event": "task_started", "instruction": "起飞，找到红色目标，飞到它上方 1 米处悬停 5 秒，然后降落", "actions": [{"action": "takeoff", "altitude": 1.5}, {"action": "search", "target": "red"}, {"action": "move_above", "target": "red", "height": 1.0}, {"action": "hover", "duration": 5.0}, {"action": "land"}]}
+{"event": "target_removed", "target": "red", "removed": true}
+{"event": "task_started", "instruction": "起飞，找到红色目标，飞到它上方 1 米处悬停 5 秒，然后降落", "actions": [{"action": "takeoff", "altitude": 1.5}, {"action": "search", "target": "red"}, {"action": "move_above", "target": "red", "height": 1.0}, {"action": "hover", "duration": 5.0}, {"action": "land"}], "planner": "rule", "planner_fallback_reason": ""}
 {"event": "action_started", "index": 0, "action": {"action": "takeoff", "altitude": 1.5}}
 {"event": "action_finished", "index": 0, "action": {"action": "takeoff", "altitude": 1.5}, "success": true, "final_error": 0.0633433692658876, "steps": 62, "reason": ""}
 {"event": "action_started", "index": 1, "action": {"action": "search", "target": "red"}}
-{"event": "target_found", "target": "red", "position": [1.5, 0.8, 0.05], "source": "sim_observation"}
-{"event": "action_started", "index": 2, "action": {"action": "move_above", "target": "red", "height": 1.0}}
-{"event": "action_finished", "index": 2, "action": {"action": "move_above", "target": "red", "height": 1.0}, "success": true, "final_error": 0.07682979692328332, "steps": 66, "reason": ""}
-{"event": "action_started", "index": 3, "action": {"action": "hover", "duration": 5.0}}
-{"event": "action_finished", "index": 3, "action": {"action": "hover", "duration": 5.0}, "success": true, "final_error": 0.0027222222222221815, "steps": 300, "reason": ""}
-{"event": "action_started", "index": 4, "action": {"action": "land"}}
-{"event": "action_finished", "index": 4, "action": {"action": "land"}, "success": true, "final_error": 0.07110313396078961, "steps": 32, "reason": ""}
-{"event": "task_finished", "success": true, "duration": 12.049875497817993, "final_position_error": 0.07110313396078961, "failure_reason": ""}
+{"event": "action_failed", "index": 1, "action": {"action": "search", "target": "red"}, "reason": "target_not_found:red"}
+{"event": "fallback_started", "reason": "target_not_found:red", "actions": [{"action": "hover", "duration": 1.0, "fallback_reason": "target_not_found:red"}, {"action": "land", "fallback_reason": "target_not_found:red"}]}
+{"event": "fallback_action_started", "index": 0, "action": {"action": "hover", "duration": 1.0, "fallback_reason": "target_not_found:red"}}
+{"event": "fallback_action_finished", "index": 0, "action": {"action": "hover", "duration": 1.0, "fallback_reason": "target_not_found:red"}, "success": true, "final_error": 0.0027222222222222925, "steps": 60, "reason": ""}
+{"event": "fallback_action_started", "index": 1, "action": {"action": "land", "fallback_reason": "target_not_found:red"}}
+{"event": "fallback_action_finished", "index": 1, "action": {"action": "land", "fallback_reason": "target_not_found:red"}, "success": true, "final_error": 0.053267741845225175, "steps": 48, "reason": ""}
+{"event": "fallback_finished", "reason": "target_not_found:red"}
+{"event": "task_finished", "success": false, "duration": 4.609923839569092, "final_position_error": 0.0633433692658876, "failure_reason": "target_not_found:red"}
