@@ -1,0 +1,13 @@
+{"event": "target_removed", "target": "blue", "removed": true}
+{"event": "task_started", "instruction": "take off, find the blue target, move above it 1 meter, hover 2 seconds, then land", "actions": [{"action": "takeoff", "altitude": 1.5}, {"action": "search", "target": "blue"}, {"action": "move_above", "target": "blue", "height": 1.0}, {"action": "hover", "duration": 2.0}, {"action": "land"}], "planner": "rule", "planner_fallback_reason": ""}
+{"event": "action_started", "index": 0, "action": {"action": "takeoff", "altitude": 1.5}}
+{"event": "action_finished", "index": 0, "action": {"action": "takeoff", "altitude": 1.5}, "success": true, "final_error": 0.0633433692658876, "steps": 62, "reason": ""}
+{"event": "action_started", "index": 1, "action": {"action": "search", "target": "blue"}}
+{"event": "action_failed", "index": 1, "action": {"action": "search", "target": "blue"}, "reason": "target_not_found:blue"}
+{"event": "fallback_started", "reason": "target_not_found:blue", "actions": [{"action": "hover", "duration": 1.0, "fallback_reason": "target_not_found:blue"}, {"action": "land", "fallback_reason": "target_not_found:blue"}]}
+{"event": "fallback_action_started", "index": 0, "action": {"action": "hover", "duration": 1.0, "fallback_reason": "target_not_found:blue"}}
+{"event": "fallback_action_finished", "index": 0, "action": {"action": "hover", "duration": 1.0, "fallback_reason": "target_not_found:blue"}, "success": true, "final_error": 0.0027222222222222925, "steps": 60, "reason": ""}
+{"event": "fallback_action_started", "index": 1, "action": {"action": "land", "fallback_reason": "target_not_found:blue"}}
+{"event": "fallback_action_finished", "index": 1, "action": {"action": "land", "fallback_reason": "target_not_found:blue"}, "success": true, "final_error": 0.053267741845225175, "steps": 48, "reason": ""}
+{"event": "fallback_finished", "reason": "target_not_found:blue"}
+{"event": "task_finished", "success": false, "duration": 4.406142950057983, "final_position_error": 0.0633433692658876, "failure_reason": "target_not_found:blue"}

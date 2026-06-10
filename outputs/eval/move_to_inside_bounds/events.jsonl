@@ -1,0 +1,10 @@
+{"event": "task_started", "instruction": "take off, move to x=1 y=-1 z=1.2, hover 2 seconds, then land", "actions": [{"action": "takeoff", "altitude": 1.5}, {"action": "move_to", "position": [1.0, -1.0, 1.2]}, {"action": "hover", "duration": 2.0}, {"action": "land"}], "planner": "rule", "planner_fallback_reason": ""}
+{"event": "action_started", "index": 0, "action": {"action": "takeoff", "altitude": 1.5}}
+{"event": "action_finished", "index": 0, "action": {"action": "takeoff", "altitude": 1.5}, "success": true, "final_error": 0.0633433692658876, "steps": 62, "reason": ""}
+{"event": "action_started", "index": 1, "action": {"action": "move_to", "position": [1.0, -1.0, 1.2]}}
+{"event": "action_finished", "index": 1, "action": {"action": "move_to", "position": [1.0, -1.0, 1.2]}, "success": true, "final_error": 0.07318736647678309, "steps": 54, "reason": ""}
+{"event": "action_started", "index": 2, "action": {"action": "hover", "duration": 2.0}}
+{"event": "action_finished", "index": 2, "action": {"action": "hover", "duration": 2.0}, "success": true, "final_error": 0.0027222222222222925, "steps": 120, "reason": ""}
+{"event": "action_started", "index": 3, "action": {"action": "land"}}
+{"event": "action_finished", "index": 3, "action": {"action": "land"}, "success": true, "final_error": 0.05334116635027672, "steps": 39, "reason": ""}
+{"event": "task_finished", "success": true, "duration": 7.303865194320679, "final_position_error": 0.05334116635027672, "failure_reason": ""}
