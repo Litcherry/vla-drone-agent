@@ -6,7 +6,7 @@ import argparse
 import time
 from typing import Any
 
-from agent.planner import parse_instruction
+from agent.planner_backend import PlannerMode, plan_instruction
 from sim.controller import DroneController
 from sim.drone import SimpleDrone
 from sim.recorder import DemoRecorder
@@ -16,18 +16,71 @@ from perception.color_detector import ColorTargetDetector
 
 from agent.replanner import build_safe_fallback_plan
 
-def run_task(task: str, gui: bool = False, output_dir: str = "outputs") -> dict[str, Any]:
+def run_task(
+        task: str, 
+        gui: bool = False, 
+        output_dir: str = "outputs",
+        planner: PlannerMode = "auto",
+    ) -> dict[str, Any]:
     """Run one natural language drone task and save demo artifacts."""
-
     started_at = time.time()
-    actions = parse_instruction(task)
-
     world = PyBulletWorld(gui=gui)
     recorder = DemoRecorder(output_dir=output_dir)
+
+    try:
+        plan_result = plan_instruction(task, mode=planner)
+        actions = plan_result.actions
+    except Exception as exc:
+        failure_reason = f"planning_failed:{type(exc).__name__}"
+        recorder.record_event(
+            {
+                "event": "task_started",
+                "instruction": task,
+                "planner": planner,
+            }
+        )
+        recorder.record_event(
+            {
+                "event": "planning_failed",
+                "success": False,
+                "reason": failure_reason,
+                "detail": str(exc),
+            }
+        )
+        recorder.record_event(
+            {
+                "event": "task_finished",
+                "success": False,
+                "duration": time.time() - started_at,
+                "final_position_error": "",
+                "failure_reason": failure_reason,
+            }
+        )
+        recorder.save()
+        return {
+            "success": False,
+            "duration": time.time() - started_at,
+            "final_position_error": "",
+            "failure_reason": failure_reason,
+            "actions": [],
+            "planner": planner,
+            "planner_fallback_reason": "",
+        }
 
     success = True
     failure_reason = ""
     final_error = 0.0
+    # started_at = time.time()
+    # plan_result = plan_instruction(task, mode=planner)
+    # actions = plan_result.actions
+
+    # world = PyBulletWorld(gui=gui)
+    # recorder = DemoRecorder(output_dir=output_dir)
+
+
+    # success = True
+    # failure_reason = ""
+    # final_error = 0.0
 
     world.connect()
 
@@ -43,6 +96,8 @@ def run_task(task: str, gui: bool = False, output_dir: str = "outputs") -> dict[
                 "event": "task_started",
                 "instruction": task,
                 "actions": actions,
+                "planner": plan_result.source,
+                "planner_fallback_reason": plan_result.fallback_reason,
             }
         )
 
@@ -216,6 +271,8 @@ def run_task(task: str, gui: bool = False, output_dir: str = "outputs") -> dict[
             "final_position_error": final_error,
             "failure_reason": failure_reason,
             "actions": actions,
+            "planner": plan_result.source,
+            "planner_fallback_reason": plan_result.fallback_reason,
         }
 
     finally:
@@ -227,9 +284,21 @@ def main() -> None:
     parser.add_argument("--task", required=True, help="Natural language task instruction.")
     parser.add_argument("--gui", action="store_true", help="Use PyBullet GUI instead of DIRECT mode.")
     parser.add_argument("--output-dir", default="outputs", help="Directory for demo artifacts.")
+    parser.add_argument(
+        "--planner",
+        choices=["auto", "llm", "rule"],
+        default="auto",
+        help="Planner backend: auto tries LLM first and falls back to rules.",
+    )
     args = parser.parse_args()
 
-    result = run_task(task=args.task, gui=args.gui, output_dir=args.output_dir)
+    
+    result = run_task(
+        task=args.task,
+        gui=args.gui,
+        output_dir=args.output_dir,
+        planner=args.planner,
+    )
     print(result)
 
 
