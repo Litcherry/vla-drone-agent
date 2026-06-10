@@ -35,11 +35,12 @@ def classify_planning_error(exc: Exception) -> str:
     return f"planning_failed:{type(exc).__name__}"
 
 def run_task(
-        task: str, 
-        gui: bool = False, 
-        output_dir: str = "outputs",
-        planner: PlannerMode = "auto",
-    ) -> dict[str, Any]:
+    task: str,
+    gui: bool = False,
+    output_dir: str = "outputs",
+    planner: PlannerMode = "auto",
+    missing_targets: list[str] | None = None,
+) -> dict[str, Any]:
     """Run one natural language drone task and save demo artifacts."""
     started_at = time.time()
     world = PyBulletWorld(gui=gui)
@@ -104,6 +105,17 @@ def run_task(
 
     try:
         world.reset()
+        if missing_targets:
+            for color in missing_targets:
+                removed = world.remove_target(color)
+                recorder.record_event(
+                    {
+                        "event": "target_removed",
+                        "target": color,
+                        "removed": removed,
+                    }
+                )
+
         drone = SimpleDrone()
         drone.spawn()
         controller = DroneController(world, drone, speed=0.025)
@@ -308,6 +320,12 @@ def main() -> None:
         default="auto",
         help="Planner backend: auto tries LLM first and falls back to rules.",
     )
+    parser.add_argument(
+        "--missing-target",
+        action="append",
+        default=[],
+        help="Remove a target color from the scene before execution. Can be used multiple times.",
+    )
     args = parser.parse_args()
 
     
@@ -316,6 +334,7 @@ def main() -> None:
         gui=args.gui,
         output_dir=args.output_dir,
         planner=args.planner,
+        missing_targets=args.missing_target,
     )
     print(result)
 

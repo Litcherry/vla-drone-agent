@@ -74,6 +74,17 @@ class PyBulletWorld:
         if target is None:
             return None
         return target.position
+    
+    def remove_target(self, color: str) -> bool:
+        """Remove a target object from the simulation world."""
+
+        self._require_connection()
+        target = self.targets.pop(color, None)
+        if target is None:
+            return False
+
+        p.removeBody(target.body_id)
+        return True
 
     def disconnect(self) -> None:
         """Disconnect from PyBullet."""
