@@ -75,3 +75,12 @@ def test_out_of_bounds_move_to_instruction_is_rejected():
 
     with pytest.raises(ValueError):
         parse_instruction(instruction)
+
+def test_unsupported_chinese_target_color_is_rejected():
+    with pytest.raises(ValueError, match="unsupported target color"):
+        parse_instruction("起飞，找到青色目标，然后降落")
+
+
+def test_unsupported_english_target_color_is_rejected():
+    with pytest.raises(ValueError, match="unsupported target color"):
+        parse_instruction("take off, find the orange target, then land")

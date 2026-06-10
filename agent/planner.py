@@ -35,6 +35,28 @@ def extract_color(text: str) -> str | None:
 
     return None
 
+def detect_unsupported_color_query(text: str) -> str | None:
+    """Detect color-target expressions outside the supported color set."""
+
+    supported_color = extract_color(text)
+    if supported_color is not None:
+        return None
+
+    chinese_match = re.search(r"([\u4e00-\u9fff]{1,3})色目标", text)
+    if chinese_match:
+        return chinese_match.group(1) + "色"
+
+    english_match = re.search(
+        r"\b([a-z]+)\s+(?:target|object|goal)\b",
+        text,
+    )
+    if english_match:
+        candidate = english_match.group(1)
+        non_color_words = {"the", "a", "an", "colored", "colour"}
+        if candidate not in non_color_words:
+            return candidate
+
+    return None
 
 def extract_first_number_before_keywords(
     text: str,
@@ -79,6 +101,10 @@ def parse_instruction(instruction: str) -> list[dict[str, Any]]:
     """Parse a natural language instruction into a validated action list."""
 
     text = normalize_instruction(instruction)
+    unsupported_color = detect_unsupported_color_query(text)
+    if unsupported_color is not None:
+        raise ValueError(f"unsupported target color: {unsupported_color}")
+    
     color = extract_color(text)
 
     actions: list[dict[str, Any]] = []

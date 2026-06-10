@@ -15,6 +15,24 @@ from sim.world import PyBulletWorld
 from perception.color_detector import ColorTargetDetector
 
 from agent.replanner import build_safe_fallback_plan
+def classify_planning_error(exc: Exception) -> str:
+    """Classify planning-stage failures for logging and evaluation."""
+
+    message = str(exc).lower()
+
+    if "unsupported target color" in message:
+        return "planning_failed:unsupported_target_color"
+
+    if "out of bounds" in message:
+        return "planning_failed:safety_violation"
+
+    if "invalid action plan" in message:
+        return "planning_failed:schema_validation"
+
+    if "could not parse instruction" in message:
+        return "planning_failed:unparseable_instruction"
+
+    return f"planning_failed:{type(exc).__name__}"
 
 def run_task(
         task: str, 
@@ -31,7 +49,7 @@ def run_task(
         plan_result = plan_instruction(task, mode=planner)
         actions = plan_result.actions
     except Exception as exc:
-        failure_reason = f"planning_failed:{type(exc).__name__}"
+        failure_reason = classify_planning_error(exc)
         recorder.record_event(
             {
                 "event": "task_started",

@@ -34,3 +34,13 @@ def test_run_task_handles_out_of_bounds_move_to(tmp_path: Path):
 
     events_text = (tmp_path / "events.jsonl").read_text(encoding="utf-8")
     assert "planning_failed" in events_text
+
+def test_run_task_classifies_unsupported_color(tmp_path: Path):
+    result = run_task(
+        task="起飞，找到青色目标，然后降落",
+        output_dir=str(tmp_path),
+        planner="rule",
+    )
+
+    assert result["success"] is False
+    assert result["failure_reason"] == "planning_failed:unsupported_target_color"
