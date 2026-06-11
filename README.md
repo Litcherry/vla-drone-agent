@@ -5,6 +5,9 @@
 本项目面向 **VLA（Vision-Language-Action）**、**Embodied Agent（具身智能）** 和 **无人系统自主控制** 方向，实现了一个从自然语言任务输入到无人机动作执行的最小闭环 Demo。
 
 系统能够解析中文或英文任务指令，完成任务规划、目标感知、安全检查、运动控制、状态监测、失败处理以及实验记录，并在 PyBullet 仿真环境中完成自主执行。
+## Demo 视频
+
+<video src="outputs/demo.mp4" controls width="720"></video>
 
 ## 功能特点
 
