@@ -106,3 +106,42 @@
 2. 设计至少 10 条自然语言实验任务，覆盖正常任务、不同颜色、不同 hover 时间、目标缺失、越界或非法任务以及需要 fallback 的情况。
 3. 实现 `experiments/evaluate.py`，批量运行任务并输出 `outputs/results.csv`。
 4. 完成 README、`docs/ai_usage.md`、实验报告和 research note 的正文内容。
+
+## Day 5
+
+### 今日完成内容
+
+1. 增强了 Planner 相关逻辑，引入可选 LLM Planner，并保留 Rule Planner 作为 fallback。系统默认采用 `auto` 模式：优先尝试 LLM Planner，若 LLM 不可用或输出非法，则自动回退到 Rule Planner。
+2. 完善了 Rule Planner 的解析能力，增加 `move_to` 坐标任务解析，支持类似 `move to x=1 y=-1 z=1.2` 的英文任务表达。
+3. 完善了 `run_demo.py` 对 planning 阶段错误的友好处理。对于无法解析指令、unsupported target color、越界任务等情况，系统不会直接崩溃，而是记录 `planning_failed` 事件并返回 `success=False`。
+4. 增加了更清晰的失败原因分类，包括 `planning_failed:unparseable_instruction`、`planning_failed:unsupported_target_color`、`planning_failed:safety_violation` 等，便于后续实验统计和失败案例分析。
+5. 完成 missing target fallback 逻辑。当任务目标颜色合法，但仿真环境中对应目标被移除时，Agent Loop 会记录 `target_not_found`，并执行安全 fallback plan：短暂悬停后降落。
+6. 设计了 10 条自然语言实验任务，覆盖正常任务、不同颜色目标、不同 hover 时间、英文任务、move_to 任务、目标缺失、unsupported color、越界任务和无法解析任务。
+7. 实现并运行 `experiments/evaluate.py`，生成 `outputs/results.csv`。当前实验结果为：10 条任务中 5 条成功、5 条失败，成功率 50.00%，成功任务平均最终位置误差约 0.0678 m。
+8. 更新了 README 文件，添加 AI 使用记录、实验报告和 research note 文档，补充了系统架构、复现命令、实验结果、失败分析、当前简化和后续方向。
+
+### 遇到的问题
+
+1. LLM Planner 接入后，需要避免系统强依赖外部 API。若没有 API Key，系统仍必须能够稳定复现。
+2. 早期 `run_demo.py` 对 planner/schema/safety 阶段的错误处理较粗糙，很多失败都只表现为 `ValueError`，不利于后续在 `results.csv` 中统计失败原因。
+3. 对 red、blue、green 之外颜色的处理需要更明确。如果用户输入“青色目标”，系统不应该静默忽略，也不应该进入 Agent Loop。
+4. 目标缺失和不支持颜色容易混淆。前者是合法目标在环境中不存在，属于执行阶段失败；后者是不支持的目标类别，应该在 planning 阶段拒绝。
+5. 运行 `experiments/evaluate.py` 时遇到 `ModuleNotFoundError: No module named 'run_demo'`，原因是直接运行 `python experiments/evaluate.py` 时，Python 没有自动将项目根目录加入模块搜索路径。
+
+### 解决方式
+
+1. 将 LLM Planner 设计为可选模块，并通过 `planner_backend.py` 提供 `auto`、`llm`、`rule` 三种模式。默认 `auto` 模式下，LLM 失败会自动 fallback 到 Rule Planner。
+2. 在 `run_demo.py` 中增加 planning failure 友好处理逻辑，使 planner/schema/safety 阶段失败时仍能生成 `events.jsonl` 并返回结构化结果。
+3. 增加 planning failure 分类函数，将不同错误区分为 `unparseable_instruction`、`unsupported_target_color`、`safety_violation` 和 `schema_validation`。
+4. 将红/蓝/绿之外的颜色目标明确识别为 unsupported target color，在执行前拒绝任务。
+5. 为 PyBullet world 增加目标移除能力，用于构造 missing target 场景。这样可以测试合法目标在环境中不存在时，Agent Loop 是否能够触发 fallback。
+6. 在 `experiments/evaluate.py` 中加入项目根目录路径，保证可以通过 `python experiments/evaluate.py --task-file experiments/tasks.json` 直接运行评估脚本。
+7. 对 evaluation 结果进行检查，确认 `outputs/results.csv` 中包含任务编号、自然语言指令、成功状态、耗时、最终误差、失败原因和 planner 信息。
+
+### AI 使用情况
+
+1. 使用 AI 辅助设计 LLM Planner 与 Rule Planner fallback 的整体结构，并根据实际运行结果调整为可复现优先的 `auto` 模式。
+2. 使用 AI 辅助分析 planner/schema/safety 阶段错误的分类方式，并结合实验需求整理出更适合 `results.csv` 统计的 failure reason。
+3. 使用 AI 辅助区分 unsupported target color 与 missing target 两类失败，并将前者设计为 planning 阶段拒绝，后者设计为执行阶段 fallback。
+4. 使用 AI 辅助定位 `experiments/evaluate.py` 的 import path 问题，并通过加入项目根目录路径修复。
+5. 使用 AI 辅助整理 README、AI 使用记录、实验报告和 research note 的结构，但文档内容根据本人实际开发过程、运行结果和项目简化情况进行了修改。

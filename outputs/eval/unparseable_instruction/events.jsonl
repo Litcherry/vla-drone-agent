@@ -1,0 +1,3 @@
+{"event": "task_started", "instruction": "随便做点什么", "planner": "rule"}
+{"event": "planning_failed", "success": false, "reason": "planning_failed:unparseable_instruction", "detail": "Could not parse instruction into actions: 随便做点什么"}
+{"event": "task_finished", "success": false, "duration": 3.24249267578125e-05, "final_position_error": "", "failure_reason": "planning_failed:unparseable_instruction"}

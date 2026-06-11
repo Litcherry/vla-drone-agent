@@ -93,7 +93,7 @@ class DemoRecorder:
         )
         width, height, rgba, _, _ = p.getCameraImage(
             width=960,
-            height=540,
+            height=544,
             viewMatrix=view_matrix,
             projectionMatrix=projection_matrix,
             renderer=p.ER_BULLET_HARDWARE_OPENGL,

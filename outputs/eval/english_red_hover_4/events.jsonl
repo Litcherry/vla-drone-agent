@@ -1,12 +1,12 @@
-{"event": "task_started", "instruction": "起飞，找到红色目标，飞到它上方 1 米处悬停 5 秒，然后降落", "actions": [{"action": "takeoff", "altitude": 1.5}, {"action": "search", "target": "red"}, {"action": "move_above", "target": "red", "height": 1.0}, {"action": "hover", "duration": 5.0}, {"action": "land"}], "planner": "rule", "planner_fallback_reason": ""}
+{"event": "task_started", "instruction": "take off, find the red target, move above it 1 meter, hover 4 seconds, then land", "actions": [{"action": "takeoff", "altitude": 1.5}, {"action": "search", "target": "red"}, {"action": "move_above", "target": "red", "height": 1.0}, {"action": "hover", "duration": 4.0}, {"action": "land"}], "planner": "rule", "planner_fallback_reason": ""}
 {"event": "action_started", "index": 0, "action": {"action": "takeoff", "altitude": 1.5}}
 {"event": "action_finished", "index": 0, "action": {"action": "takeoff", "altitude": 1.5}, "success": true, "final_error": 0.0633433692658876, "steps": 62, "reason": ""}
 {"event": "action_started", "index": 1, "action": {"action": "search", "target": "red"}}
 {"event": "target_found", "target": "red", "position": [1.5, 0.8, 0.05], "source": "sim_observation"}
 {"event": "action_started", "index": 2, "action": {"action": "move_above", "target": "red", "height": 1.0}}
 {"event": "action_finished", "index": 2, "action": {"action": "move_above", "target": "red", "height": 1.0}, "success": true, "final_error": 0.07682979692328332, "steps": 66, "reason": ""}
-{"event": "action_started", "index": 3, "action": {"action": "hover", "duration": 5.0}}
-{"event": "action_finished", "index": 3, "action": {"action": "hover", "duration": 5.0}, "success": true, "final_error": 0.0027222222222221815, "steps": 300, "reason": ""}
+{"event": "action_started", "index": 3, "action": {"action": "hover", "duration": 4.0}}
+{"event": "action_finished", "index": 3, "action": {"action": "hover", "duration": 4.0}, "success": true, "final_error": 0.0027222222222221815, "steps": 240, "reason": ""}
 {"event": "action_started", "index": 4, "action": {"action": "land"}}
 {"event": "action_finished", "index": 4, "action": {"action": "land"}, "success": true, "final_error": 0.07110313396078961, "steps": 32, "reason": ""}
-{"event": "task_finished", "success": true, "duration": 12.111948490142822, "final_position_error": 0.07110313396078961, "failure_reason": ""}
+{"event": "task_finished", "success": true, "duration": 10.499572038650513, "final_position_error": 0.07110313396078961, "failure_reason": ""}

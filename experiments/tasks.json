@@ -1,2 +1,62 @@
-[]
-
+[
+  {
+    "task_id": "normal_red_hover_5",
+    "instruction": "起飞，找到红色目标，飞到它上方 1 米处悬停 5 秒，然后降落",
+    "planner": "rule",
+    "missing_targets": []
+  },
+  {
+    "task_id": "normal_blue_hover_3",
+    "instruction": "起飞，找到蓝色目标，飞到它上方 1 米处悬停 3 秒，然后降落",
+    "planner": "rule",
+    "missing_targets": []
+  },
+  {
+    "task_id": "normal_green_hover_2",
+    "instruction": "起飞，搜索绿色目标，飞到绿色目标上方，悬停 2 秒，然后降落",
+    "planner": "rule",
+    "missing_targets": []
+  },
+  {
+    "task_id": "english_red_hover_4",
+    "instruction": "take off, find the red target, move above it 1 meter, hover 4 seconds, then land",
+    "planner": "rule",
+    "missing_targets": []
+  },
+  {
+    "task_id": "move_to_inside_bounds",
+    "instruction": "take off, move to x=1 y=-1 z=1.2, hover 2 seconds, then land",
+    "planner": "rule",
+    "missing_targets": []
+  },
+  {
+    "task_id": "missing_red_target",
+    "instruction": "起飞，找到红色目标，飞到它上方 1 米处悬停 2 秒，然后降落",
+    "planner": "rule",
+    "missing_targets": ["red"]
+  },
+  {
+    "task_id": "missing_blue_target",
+    "instruction": "take off, find the blue target, move above it 1 meter, hover 2 seconds, then land",
+    "planner": "rule",
+    "missing_targets": ["blue"]
+  },
+  {
+    "task_id": "unsupported_color_cyan",
+    "instruction": "起飞，找到青色目标，然后降落",
+    "planner": "rule",
+    "missing_targets": []
+  },
+  {
+    "task_id": "out_of_bounds_move_to",
+    "instruction": "take off, move to x=5 y=0 z=1, hover 2 seconds, then land",
+    "planner": "rule",
+    "missing_targets": []
+  },
+  {
+    "task_id": "unparseable_instruction",
+    "instruction": "随便做点什么",
+    "planner": "rule",
+    "missing_targets": []
+  }
+]
