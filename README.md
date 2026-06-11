@@ -5,7 +5,9 @@
 本项目面向 **VLA（Vision-Language-Action）**、**Embodied Agent（具身智能）** 和 **无人系统自主控制** 方向，实现了一个从自然语言任务输入到无人机动作执行的最小闭环 Demo。
 
 系统能够解析中文或英文任务指令，完成任务规划、目标感知、安全检查、运动控制、状态监测、失败处理以及实验记录，并在 PyBullet 仿真环境中完成自主执行。
+
 ## Demo 视频
+
 以下视频展示了系统执行示例指令的过程：
 
 指令：起飞，找到红色目标，飞到它上方1米处悬停5秒，然后降落
@@ -14,14 +16,16 @@
   <img src="outputs/demo.gif" alt="PyBullet drone demo" width="720">
 </p>
 
+
 完整视频文件见：[outputs/demo.mp4](outputs/demo.mp4)
+
 ## 功能特点
 
 - 支持中文、英文自然语言任务指令解析
 - 支持规则 Planner 与 LLM Planner 两种规划方式
 - 使用 Pydantic action schema 对动作序列进行结构化校验
 - 支持工作空间边界与任务安全检查
-- 支持颜色目标（Red / Blue / Green）感知
+- 支持颜色目标（Red / Blue / Green）感知，包含图像颜色分割与仿真观测 fallback 两种后端
 - 支持无人机起飞、移动、悬停、降落等动作控制
 - 支持失败检测与自动回退（Fallback）
 - 自动保存视频、轨迹、事件日志及实验结果
@@ -76,41 +80,42 @@ flowchart LR
 ```text
 vla-drone-agent/
 ├── agent/
-│   ├── planner.py             # 规则 Planner：中英文指令解析
-│   ├── llm_planner.py         # 可选 LLM Planner
-│   ├── planner_backend.py     # Planner 后端选择:auto/rule/llm 与 fallback
-│   ├── schema.py              # Pydantic action schema 校验
-│   ├── safety.py              # 工作空间边界与安全检查
-│   └── replanner.py           # 失败后的安全 fallback plan
+│   ├── planner.py              # 规则 Planner：中英文指令解析
+│   ├── llm_planner.py          # 可选 LLM Planner
+│   ├── planner_backend.py      # Planner 后端选择:auto/rule/llm 与 fallback
+│   ├── schema.py               # Pydantic action schema 校验
+│   ├── safety.py               # 工作空间边界与安全检查
+│   └── replanner.py            # 失败后的安全 fallback plan
 │
 ├── perception/
-│   ├── color_detector.py      # 颜色目标感知接口
-│   └── camera.py              # 相机/观测扩展预留
+│   ├── color_detector.py       # 颜色目标感知接口
+│   ├── image_color_detector.py # 基于 PyBullet camera image 的颜色分割感知
+│   └── camera.py               # 相机/观测扩展预留
 │
 ├── sim/
-│   ├── world.py               # PyBullet 世界与彩色目标
-│   ├── drone.py               # 简化无人机模型
-│   ├── controller.py          # 起飞、移动、悬停、降落控制
-│   └── recorder.py            # 视频、轨迹与事件日志记录
+│   ├── world.py                # PyBullet 世界与彩色目标
+│   ├── drone.py                # 简化无人机模型
+│   ├── controller.py           # 起飞、移动、悬停、降落控制
+│   └── recorder.py             # 视频、轨迹与事件日志记录
 │
 ├── experiments/
-│   ├── tasks.json             # 10 条自然语言评估任务
-│   └── evaluate.py            # 批量评估脚本
+│   ├── tasks.json              # 10 条自然语言评估任务
+│   └── evaluate.py             # 批量评估脚本
 │
 ├── outputs/
-│   ├── demo.mp4               # 单任务演示视频
-│   ├── trajectory.csv         # 无人机轨迹与控制误差
-│   ├── events.jsonl           # Agent Loop 事件日志
-│   └── results.csv            # 批量实验结果
+│   ├── demo.mp4                # 单任务演示视频
+│   ├── trajectory.csv          # 无人机轨迹与控制误差
+│   ├── events.jsonl            # Agent Loop 事件日志
+│   └── results.csv             # 批量实验结果
 │
 ├── docs/
-│   ├── dev_log.md             # 每日开发记录
-│   ├── ai_usage.md            # AI 使用说明
-│   ├── report.pdf             # 实验报告
-│   └── research_note.pdf      # Research Note
+│   ├── dev_log.md              # 每日开发记录
+│   ├── ai_usage.md             # AI 使用说明
+│   ├── report.pdf              # 实验报告
+│   └── research_note.pdf       # Research Note
 │
-├── run_demo.py                # 单条自然语言任务 demo 入口与 Agent Loop
-├── requirements.txt           # Python 依赖
+├── run_demo.py                 # 单条自然语言任务 demo 入口与 Agent Loop
+├── requirements.txt            # Python 依赖
 └── README.md
 ```
 
@@ -140,12 +145,20 @@ pip install -r requirements.txt
 
 ## 快速开始
 
-默认采用 `auto` 模式，即：优先调用 LLM Planner；若 LLM 不可用或输出非法，则自动回退到 Rule Planner。
-
 运行 Demo：
 
 ```bash
 python run_demo.py --task "起飞，找到红色目标，飞到它上方1米处悬停5秒，然后降落"
+```
+
+### Rule Planner / LLM Planner 切换
+
+默认采用 auto 模式，即：优先调用 LLM Planner；若 LLM 不可用或输出非法，则自动回退到 Rule Planner。
+
+显式指定 auto 模式：
+
+```bash
+python run_demo.py --planner auto --task "起飞，找到红色目标，飞到它上方1米处悬停5秒，然后降落"
 ```
 
 强制使用 Rule Planner：
@@ -161,6 +174,31 @@ python run_demo.py --planner llm --task "起飞，找到红色目标，飞到它
 ```
 
 注意：`--planner llm` 模式要求已正确配置 LLM API Key。如果 LLM 不可用，该模式会直接报错；若希望 LLM 不可用时自动回退到规则 Planner，请使用默认的 `auto` 模式。
+
+### 图像感知 / 仿真观测切换
+
+默认采用 hybrid 模式，即：优先使用基于 PyBullet camera image 的颜色分割感知；若图像检测失败，则自动回退到 simulator observation。
+
+显式指定 hybrid 模式：
+
+```bash
+python run_demo.py --planner rule --perception hybrid --task "起飞，找到红色目标，飞到它上方1米处悬停5秒，然后降落"
+```
+
+强制使用图像感知：
+
+```bash
+python run_demo.py --planner rule --perception image --task "起飞，找到红色目标，飞到它上方1米处悬停5秒，然后降落"
+```
+
+强制使用仿真观测：
+
+```bash
+python run_demo.py --planner rule --perception sim --task "起飞，找到红色目标，飞到它上方1米处悬停5秒，然后降落"
+```
+
+### outputs
+
 
 运行结束后，将生成：
 
@@ -266,25 +304,25 @@ pytest -q
 
 ## 输出文件
 
-| 文件           | 说明         |
-| -------------- | ------------ |
-| demo.mp4       | 仿真视频     |
-| trajectory.csv | 飞行轨迹     |
-| events.jsonl   | 事件日志     |
-| results.csv    | 批量实验结果 |
+| 文件                     | 说明         |
+| ------------------------ | ------------ |
+| `outputs/demo.mp4`       | 仿真视频     |
+| `outputs/trajectory.csv` | 飞行轨迹     |
+| `outputs/events.jsonl`   | 事件日志     |
+| `outputs/results.csv`    | 批量实验结果 |
 
 ## 当前简化
 
 为了实现最小闭环，本项目进行了如下简化：
 
 - 使用位置控制替代真实四旋翼动力学控制；
-- Perception 直接读取仿真环境目标信息，而非 RGB 图像检测；
+- Perception 已支持图像颜色分割，但仍是仿真环境下的简化视觉感知，依赖固定相机视角与 depth buffer;
 - LLM Planner 为可选模块，默认保留规则 Planner；
 - 失败重规划采用保守策略（悬停后降落）。
 
 ## 后续改进方向
 
-- 基于 RGB / Depth 图像实现目标检测；
+- 将当前 HSV 颜色分割升级为更鲁棒的 RGB / Depth 目标检测与跟踪；
 - 引入更真实的无人机动力学模型；
 - 增加 SayCan 风格动作可执行性评分；
 - 支持 LLM 自动修复非法规划结果；
