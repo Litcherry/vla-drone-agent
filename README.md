@@ -6,9 +6,13 @@
 
 系统能够解析中文或英文任务指令，完成任务规划、目标感知、安全检查、运动控制、状态监测、失败处理以及实验记录，并在 PyBullet 仿真环境中完成自主执行。
 ## Demo 视频
+以下视频展示了系统执行示例指令的过程：
 
-<video src="outputs/demo.mp4" controls width="720"></video>
+指令：起飞，找到红色目标，飞到它上方1米处悬停5秒，然后降落
 
+![PyBullet drone demo](outputs/demo.gif)
+
+完整视频文件见：[outputs/demo.mp4](outputs/demo.mp4)
 ## 功能特点
 
 - 支持中文、英文自然语言任务指令解析
