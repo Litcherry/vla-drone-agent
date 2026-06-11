@@ -1,12 +1,14 @@
-{"event": "task_started", "instruction": "起飞，找到红色目标，飞到它上方 1 米处悬停 5 秒，然后降落", "actions": [{"action": "takeoff", "altitude": 1.5}, {"action": "search", "target": "red"}, {"action": "move_above", "target": "red", "height": 1.0}, {"action": "hover", "duration": 5.0}, {"action": "land"}], "planner": "rule", "planner_fallback_reason": ""}
+{"event": "task_started", "instruction": "起飞，找到红色目标，飞到它上方1米处悬停5秒，然后降落", "actions": [{"action": "takeoff", "altitude": 1.5}, {"action": "search", "target": "red"}, {"action": "move_above", "target": "red", "height": 1.0}, {"action": "hover", "duration": 5.0}, {"action": "land"}], "planner": "rule", "planner_fallback_reason": "", "perception": "image"}
 {"event": "action_started", "index": 0, "action": {"action": "takeoff", "altitude": 1.5}}
 {"event": "action_finished", "index": 0, "action": {"action": "takeoff", "altitude": 1.5}, "success": true, "final_error": 0.0633433692658876, "steps": 62, "reason": ""}
 {"event": "action_started", "index": 1, "action": {"action": "search", "target": "red"}}
-{"event": "target_found", "target": "red", "position": [1.5, 0.8, 0.05], "source": "sim_observation"}
+{"event": "image_target_detected", "target": "red", "pixel_center": [616, 334], "bbox": [606, 325, 20, 18], "confidence": 0.0004854090073529412, "position": [1.5480489455642057, 0.7174171146457239, 0.11936706327447502], "source": "image_color_segmentation"}
+{"event": "target_found", "target": "red", "position": [1.5480489455642057, 0.7174171146457239, 0.11936706327447502], "source": "image_color_segmentation"}
 {"event": "action_started", "index": 2, "action": {"action": "move_above", "target": "red", "height": 1.0}}
-{"event": "action_finished", "index": 2, "action": {"action": "move_above", "target": "red", "height": 1.0}, "success": true, "final_error": 0.07682979692328332, "steps": 66, "reason": ""}
+{"event": "image_target_detected", "target": "red", "pixel_center": [616, 334], "bbox": [606, 325, 20, 18], "confidence": 0.0004854090073529412, "position": [1.5480489455642057, 0.7174171146457239, 0.11936706327447502], "source": "image_color_segmentation"}
+{"event": "action_finished", "index": 2, "action": {"action": "move_above", "target": "red", "height": 1.0}, "success": true, "final_error": 0.05815488621369176, "steps": 67, "reason": ""}
 {"event": "action_started", "index": 3, "action": {"action": "hover", "duration": 5.0}}
 {"event": "action_finished", "index": 3, "action": {"action": "hover", "duration": 5.0}, "success": true, "final_error": 0.0027222222222221815, "steps": 300, "reason": ""}
 {"event": "action_started", "index": 4, "action": {"action": "land"}}
-{"event": "action_finished", "index": 4, "action": {"action": "land"}, "success": true, "final_error": 0.07110313396078961, "steps": 32, "reason": ""}
-{"event": "task_finished", "success": true, "duration": 12.111948490142822, "final_position_error": 0.07110313396078961, "failure_reason": ""}
+{"event": "action_finished", "index": 4, "action": {"action": "land"}, "success": true, "final_error": 0.06598571589001966, "steps": 32, "reason": ""}
+{"event": "task_finished", "success": true, "duration": 12.290017127990723, "final_position_error": 0.06598571589001966, "failure_reason": ""}
