@@ -10,7 +10,9 @@
 
 指令：起飞，找到红色目标，飞到它上方1米处悬停5秒，然后降落
 
-![PyBullet drone demo](outputs/demo.gif)
+<p align="center">
+  <img src="outputs/demo.gif" alt="PyBullet drone demo" width="720">
+</p>
 
 完整视频文件见：[outputs/demo.mp4](outputs/demo.mp4)
 ## 功能特点
