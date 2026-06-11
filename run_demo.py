@@ -7,14 +7,16 @@ import time
 from typing import Any
 
 from agent.planner_backend import PlannerMode, plan_instruction
+from agent.replanner import build_safe_fallback_plan
+
 from sim.controller import DroneController
 from sim.drone import SimpleDrone
 from sim.recorder import DemoRecorder
 from sim.world import PyBulletWorld
 
 from perception.color_detector import ColorTargetDetector
+from perception.image_color_detector import ImageColorDetector
 
-from agent.replanner import build_safe_fallback_plan
 def classify_planning_error(exc: Exception) -> str:
     """Classify planning-stage failures for logging and evaluation."""
 
@@ -40,6 +42,7 @@ def run_task(
     output_dir: str = "outputs",
     planner: PlannerMode = "auto",
     missing_targets: list[str] | None = None,
+    perception: str = "hybrid",
 ) -> dict[str, Any]:
     """Run one natural language drone task and save demo artifacts."""
     started_at = time.time()
@@ -56,6 +59,7 @@ def run_task(
                 "event": "task_started",
                 "instruction": task,
                 "planner": planner,
+                "perception": perception,
             }
         )
         recorder.record_event(
@@ -84,22 +88,12 @@ def run_task(
             "actions": [],
             "planner": planner,
             "planner_fallback_reason": "",
+            "perception": perception,
         }
 
     success = True
     failure_reason = ""
     final_error = 0.0
-    # started_at = time.time()
-    # plan_result = plan_instruction(task, mode=planner)
-    # actions = plan_result.actions
-
-    # world = PyBulletWorld(gui=gui)
-    # recorder = DemoRecorder(output_dir=output_dir)
-
-
-    # success = True
-    # failure_reason = ""
-    # final_error = 0.0
 
     world.connect()
 
@@ -119,7 +113,10 @@ def run_task(
         drone = SimpleDrone()
         drone.spawn()
         controller = DroneController(world, drone, speed=0.025)
-        detector = ColorTargetDetector(world)
+        # detector = ColorTargetDetector(world)
+
+        sim_detector = ColorTargetDetector(world)
+        image_detector = ImageColorDetector()
 
         recorder.record_event(
             {
@@ -128,6 +125,7 @@ def run_task(
                 "actions": actions,
                 "planner": plan_result.source,
                 "planner_fallback_reason": plan_result.fallback_reason,
+                "perception": perception,
             }
         )
 
@@ -146,6 +144,38 @@ def run_task(
                 recorder.capture_frame()
             elapsed_steps += 1
 
+        def detect_target(color: str):
+            if perception in ("image", "hybrid"):
+                image_detection = image_detector.detect(color)  # type: ignore[arg-type]
+                if image_detection is not None:
+                    recorder.record_event(
+                        {
+                            "event": "image_target_detected",
+                            "target": color,
+                            "pixel_center": image_detection.pixel_center,
+                            "bbox": image_detection.bbox,
+                            "confidence": image_detection.confidence,
+                            "position": image_detection.position,
+                            "source": image_detection.source,
+                        }
+                    )
+                    return image_detection
+
+                if perception == "image":
+                    return None
+
+            sim_detection = sim_detector.detect(color)  # type: ignore[arg-type]
+            if sim_detection is not None and perception == "hybrid":
+                recorder.record_event(
+                    {
+                        "event": "perception_fallback",
+                        "target": color,
+                        "from": "image_color_segmentation",
+                        "to": sim_detection.source,
+                    }
+                )
+            return sim_detection
+        
         def execute_fallback(reason: str) -> None:
             fallback_actions = build_safe_fallback_plan(reason)
             recorder.record_event(
@@ -201,7 +231,7 @@ def run_task(
 
             elif action_name == "search":
                 target_color = action["target"]
-                detection = detector.detect(target_color)
+                detection = detect_target(target_color)
                 if detection is None:
                     success = False
                     failure_reason = f"target_not_found:{target_color}"
@@ -231,7 +261,7 @@ def run_task(
 
             elif action_name == "move_above":
                 target_color = action["target"]
-                detection = detector.detect(target_color)
+                detection = detect_target(target_color)
                 if detection is None:
                     success = False
                     failure_reason = f"target_not_found:{target_color}"
@@ -303,6 +333,7 @@ def run_task(
             "actions": actions,
             "planner": plan_result.source,
             "planner_fallback_reason": plan_result.fallback_reason,
+            "perception": perception,
         }
 
     finally:
@@ -326,6 +357,12 @@ def main() -> None:
         default=[],
         help="Remove a target color from the scene before execution. Can be used multiple times.",
     )
+    parser.add_argument(
+        "--perception",
+        choices=["sim", "image", "hybrid"],
+        default="hybrid",
+        help="Perception backend: sim observation, image color segmentation, or hybrid.",
+    )
     args = parser.parse_args()
 
     
@@ -335,6 +372,7 @@ def main() -> None:
         output_dir=args.output_dir,
         planner=args.planner,
         missing_targets=args.missing_target,
+        perception=args.perception,
     )
     print(result)
 
